@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhóm 2 | LONG - LÂN - QUY - PHỤNG</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase SDKs & Config -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDgJ8UfkfV2MCnFOjn_Z_31tm3sCk7Tpv8",
+            authDomain: "longlanquyphung.firebaseapp.com",
+            projectId: "longlanquyphung",
+            storageBucket: "longlanquyphung.firebasestorage.app",
+            messagingSenderId: "482712895043",
+            appId: "1:482712895043:web:eb582db0b8a04dcff59ef6",
+            measurementId: "G-4NGX4BWCBE"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.getDocs = getDocs;
+        window.doc = doc;
+        window.updateDoc = updateDoc;
+        window.deleteDoc = deleteDoc;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof window.loadAssignmentsFromFirebase === 'function') {
+                window.loadAssignmentsFromFirebase();
+            }
+        });
+    </script>
+
+    <style>
+        body {
+            font-family: "Times New Roman", Times, Georgia, serif;
+            background-color: #FAF6EE;
+            color: #1A1A1A;
+        }
+
+        .member-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            max-width: 1150px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: #FFFDF9;
+            border: 2px solid #E5D5C0;
+            border-radius: 14px;
+            padding: 28px 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(200, 62, 43, 0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 18px rgba(42, 123, 114, 0.2);
+            border-color: #2A7B72;
+        }
+
+        .avatar {
+            width: 140px;
+            height: 160px;
+            border-radius: 10px;
+            object-fit: cover;
+            background-color: #F3ECE0;
+            border: 3px solid #C83E2B; 
+            outline: 2px solid #D4A237;
+            outline-offset: -5px;
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+
+        .card:hover .avatar {
+            transform: scale(1.03);
+        }
+
+        .group-photo {
+            width: 100%;
+            max-height: 450px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 4px solid #C83E2B;
+            outline: 3px solid #D4A237;
+            outline-offset: -8px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #8C2318;
+            margin-bottom: 4px;
+        }
+
+        .role {
+            font-size: 13px;
+            color: #2A7B72;
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .modal-backdrop {
+            background-color: rgba(26, 26, 26, 0.65);
+            backdrop-filter: blur(4px);
+        }
+
+        .editor-box {
+            min-height: 160px;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .editor-box img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 8px 0;
+            border: 1px solid #E5D5C0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 960px) {
+            .member-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 560px) {
+            .member-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header & Navigation -->
+    <header class="bg-[#C83E2B] text-[#FFFDF9] shadow-md border-b-4 border-[#D4A237]">
+        <div class="container mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-2">
+            
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('about')">
+                <img src="logo.png" 
+                     alt="Logo Nhóm" 
+                     class="w-11 h-11 rounded-full object-cover border-2 border-[#D4A237] bg-[#FFFDF9] shadow-md"
+                     onerror="this.src='https://cdn.phototourl.com/member/2026-10-31-0f9b8774-ae88-4d65-b077-c8def9b9db1c.png'">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-wide">LONG - LÂN - QUY - PHỤNG</h1>
+                </div>
+            </div>
+
+            <nav class="space-x-1 sm:space-x-2">
+                <button onclick="switchTab('about')" id="btn-about" class="px-3 py-2 rounded-lg bg-[#8C2318] text-[#E8BA5A] font-bold border border-[#D4A237] transition text-sm sm:text-base">Trang Chủ</button>
+                <button onclick="switchTab('members')" id="btn-members" class="px-3 py-2 rounded-lg hover:bg-[#8C2318] hover:text-[#E8BA5A] font-medium transition text-sm sm:text-base">Thành Viên</button>
+                <button onclick="switchTab('assignments')" id="btn-assignments" class="px-3 py-2 rounded-lg hover:bg-[#8C2318] hover:text-[#E8BA5A] font-medium transition text-sm sm:text-base">Bài Tập Nhóm</button>
+            </nav>
+
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 flex-grow">
+
+        <!-- TRANG CHỦ -->
+        <section id="tab-about" class="space-y-8 max-w-4xl mx-auto">
+            <div class="text-center mb-6">
+                <h2 class="text-3xl font-bold text-[#8C2318] tracking-wider">LONG - LÂN - QUY - PHỤNG</h2>
+                <div class="w-24 h-1 bg-[#D4A237] mx-auto my-2 rounded"></div>
+                <p class="text-[#554A3E] mt-1 italic font-medium">Đây là trang web xây lên nhằm mục đích học tập của chúng mình. Hãy cùng Duyên, Trúc, Châu, Tỷ học thật tốt nha.</p>
+            </div>
+
+            <div class="bg-[#FFFDF9] p-6 rounded-xl shadow-md border-2 border-[#E5D5C0] text-center">
+                <img src="nhom.jpg" alt="Ảnh chung của nhóm" class="group-photo mx-auto" onerror="this.src='https://placehold.co/800x400/F3ECE0/2A7B72?text=Chèn+Ảnh+Chung+Của+Nhóm+Vào+Đây+(nhom.jpg)'">
+                <p class="text-sm text-[#554A3E] mt-3 italic">"Đoàn kết, sáng tạo và cùng nhau vươn lên đỉnh cao tri thức!"</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-[#FFFDF9] p-6 rounded-xl shadow-md border-2 border-[#E5D5C0]">
+                    <h3 class="text-xl font-bold text-[#8C2318] mb-3">🎯 Mục Tiêu Hoạt Động</h3>
+                    <ul class="space-y-2 text-[#554A3E] text-sm leading-relaxed list-disc list-inside">
+                        <li>Lưu trữ toàn bộ các bài tập nhóm và báo cáo học tập trực tuyến.</li>
+                        <li>Nâng cao kỹ năng công nghệ thông tin và làm việc nhóm thực chiến.</li>
+                        <li>Xây dựng không gian chia sẻ tài liệu khoa học, rõ ràng và chuyên nghiệp.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-[#FFFDF9] p-6 rounded-xl shadow-md border-2 border-[#E5D5C0]">
+                    <h3 class="text-xl font-bold text-[#2A7B72] mb-3">💡 Hướng Dẫn Trải Nghiệm</h3>
+                    <ul class="space-y-2 text-[#554A3E] text-sm leading-relaxed list-disc list-inside">
+                        <li><strong>Trang Chủ:</strong> Xem thông tin tổng quan và hình ảnh đại diện của nhóm.</li>
+                        <li><strong>Thành Viên:</strong> Xem chi tiết profile từng thành viên và cập nhật thông tin cá nhân.</li>
+                        <li><strong>Bài Tập Nhóm:</strong> Nơi cập nhật các bài tập theo dạng ký hiệu/biểu tượng trực quan.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- THÀNH VIÊN -->
+        <section id="tab-members" class="hidden space-y-8">
+            <div class="flex justify-between items-center max-w-[1150px] mx-auto border-b border-[#E5D5C0] pb-4">
+                <button onclick="switchTab('about')" class="flex items-center space-x-2 px-3 py-1.5 bg-[#F3ECE0] text-[#8C2318] rounded-lg hover:bg-[#E5D5C0] transition text-sm font-semibold border border-[#D4A237]">
+                    <span>⬅ Quay về Trang Chủ</span>
+                </button>
+                <span class="text-xs text-[#554A3E] italic">Nhấp vào thẻ thành viên để xem và cập nhật profile riêng biệt</span>
+            </div>
+
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-[#8C2318] tracking-wider">THÀNH VIÊN NHÓM</h2>
+                <div class="w-24 h-1 bg-[#D4A237] mx-auto my-2 rounded"></div>
+                <p class="text-[#554A3E] mt-1 italic">Những mảnh ghép tuyệt vời tạo nên LONG - LÂN - QUY - PHỤNG.</p>
+            </div>
+
+            <div class="member-grid">
+                <div class="card" onclick="openProfile('duyen')">
+                    <img id="card-avatar-duyen" src="duyen.jpg" alt="Võ Thị Kim Duyên" class="avatar" onerror="this.src='https://placehold.co/140x160/F3ECE0/2A7B72?text=Kim+Duyên'">
+                    <h3 class="name">Võ Thị Kim Duyên</h3>
+                    <p class="role">Thành viên</p>
+                    <p id="card-bio-duyen" class="bio text-sm text-[#554A3E]">Thành viên tích cực</p>
+                </div>
+
+                <div class="card" onclick="openProfile('truc')">
+                    <img id="card-avatar-truc" src="truc.jpg" alt="Lê Thanh Trúc" class="avatar" onerror="this.src='https://placehold.co/140x160/F3ECE0/2A7B72?text=Thanh+Trúc'">
+                    <h3 class="name">Lê Thanh Trúc</h3>
+                    <p class="role">Nhóm trưởng</p>
+                    <p id="card-bio-truc" class="bio text-sm text-[#554A3E]">Điều hành chung</p>
+                </div>
+
+                <div class="card" onclick="openProfile('chau')">
+                    <img id="card-avatar-chau" src="chau.jpg" alt="Phạm Ngọc Châu" class="avatar" onerror="this.src='https://placehold.co/140x160/F3ECE0/2A7B72?text=Ngọc+Châu'">
+                    <h3 class="name">Phạm Ngọc Châu</h3>
+                    <p class="role">Nhóm trưởng</p>
+                    <p id="card-bio-chau" class="bio text-sm text-[#554A3E]">Sáng tạo nội dung</p>
+                </div>
+
+                <div class="card" onclick="openProfile('ty')">
+                    <img id="card-avatar-ty" src="ty.jpg" alt="Đoàn Xuân Tỷ" class="avatar" onerror="this.src='https://placehold.co/140x160/F3ECE0/2A7B72?text=Xuân+Tỷ'">
+                    <h3 class="name">Đoàn Xuân Tỷ</h3>
+                    <p class="role">Nhóm trưởng</p>
+                    <p id="card-bio-ty" class="bio text-sm text-[#554A3E]">Kỹ thuật & Vận hành</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- BÀI TẬP NHÓM -->
+        <section id="tab-assignments" class="hidden space-y-6 max-w-3xl mx-auto">
+            <div class="flex justify-between items-center border-b border-[#E5D5C0] pb-4">
+                <button onclick="switchTab('about')" class="flex items-center space-x-2 px-3 py-1.5 bg-[#F3ECE0] text-[#8C2318] rounded-lg hover:bg-[#E5D5C0] transition text-sm font-semibold border border-[#D4A237]">
+                    <span>⬅ Quay về Trang Chủ</span>
+                </button>
+                <button onclick="openAssignmentForm()" class="px-4 py-2 bg-[#8C2318] text-[#E8BA5A] font-bold rounded-lg hover:bg-[#C83E2B] transition text-sm border border-[#D4A237] shadow-sm">
+                    ➕ Đăng Bài Tập Mới
+                </button>
+            </div>
+
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-[#8C2318] tracking-wider">BÀI TẬP NHÓM</h2>
+                <div class="w-24 h-1 bg-[#D4A237] mx-auto my-2 rounded"></div>
+                <p class="text-[#554A3E] mt-1 italic">Nhấp vào biểu tượng bài tập để mở và xem chi tiết nội dung.</p>
+            </div>
+
+            <div class="relative">
+                <input type="text" id="search-input" oninput="filterAssignments()" placeholder="🔍 Tìm kiếm bài tập theo tên hoặc ký hiệu..." class="w-full px-4 py-3 bg-[#FFFDF9] border-2 border-[#E5D5C0] rounded-xl shadow-sm focus:outline-none focus:border-[#2A7B72] text-sm text-[#554A3E]">
+            </div>
+
+            <div id="assignments-list" class="space-y-4"></div>
+        </section>
+
+    </main>
+
+    <!-- MODAL PROFILE RIÊNG BIỆT CỦA THÀNH VIÊN -->
+    <div id="profile-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-backdrop" onclick="closeProfileOnBackdrop(event)">
+        <div class="bg-[#FFFDF9] border-4 border-[#C83E2B] outline outline-2 outline-[#D4A237] rounded-2xl max-w-lg w-full p-6 shadow-2xl relative" onclick="event.stopPropagation()">
+            <button onclick="closeProfile()" class="absolute top-3 right-3 text-[#8C2318] hover:text-[#C83E2B] text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full bg-[#F3ECE0] border border-[#D4A237]">&times;</button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- MODAL NHẬP MẬT MÃ BẢO MẬT THÀNH VIÊN -->
+    <div id="password-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-backdrop">
+        <div class="bg-[#FFFDF9] border-4 border-[#C83E2B] rounded-2xl max-w-sm w-full p-6 shadow-2xl text-center">
+            <h3 class="text-lg font-bold text-[#8C2318] mb-2">🔒 Xác Thực Quyền Collaborator</h3>
+            <p class="text-xs text-[#554A3E] mb-4">Nhập mật mã thành viên để chỉnh sửa thông tin profile.</p>
+            <input type="password" id="member-pass-input" placeholder="Nhập mật mã..." class="w-full px-3 py-2 border border-[#E5D5C0] rounded-lg mb-4 text-center text-sm focus:outline-none focus:border-[#2A7B72]">
+            <div class="flex justify-center space-x-2">
+                <button onclick="verifyMemberPassword()" class="px-4 py-2 bg-[#8C2318] text-[#E8BA5A] font-bold rounded-lg text-sm">Xác nhận</button>
+                <button onclick="closePasswordModal()" class="px-4 py-2 bg-[#F3ECE0] text-[#554A3E] rounded-lg text-sm">Hủy</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CHỈNH SỬA PROFILE -->
+    <div id="edit-profile-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-backdrop">
+        <div class="bg-[#FFFDF9] border-4 border-[#C83E2B] rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <h3 class="text-xl font-bold text-[#8C2318] mb-4 text-center">✏️ Chỉnh Sửa Profile Thành Viên</h3>
+            <div class="space-y-3 text-sm">
+                <div>
+                    <label class="font-bold text-[#554A3E]">Đường dẫn ảnh Avatar (URL):</label>
+                    <input type="text" id="edit-avatar-url" class="w-full px-3 py-2 border border-[#E5D5C0] rounded-lg mt-1">
+                </div>
+                <div>
+                    <label class="font-bold text-[#554A3E]">Thông tin chi tiết / Tiểu sử:</label>
+                    <textarea id="edit-bio-text" rows="3" class="w-full px-3 py-2 border border-[#E5D5C0] rounded-lg mt-1"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 mt-4">
+                <button onclick="saveProfileChanges()" class="px-4 py-2 bg-[#2A7B72] text-white font-bold rounded-lg text-sm">Lưu thay đổi</button>
+                <button onclick="closeEditProfileModal()" class="px-4 py-2 bg-[#F3ECE0] text-[#554A3E] rounded-lg text-sm">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ĐĂNG / CHỈNH SỬA BÀI TẬP -->
+    <div id="assignment-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-backdrop">
+        <div class="bg-[#FFFDF9] border-4 border-[#C83E2B] rounded-2xl max-w-xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h3 id="assignment-modal-title" class="text-xl font-bold text-[#8C2318] mb-4 text-center">📝 Đăng Bài Tập Mới</h3>
+            <input type="hidden" id="edit-assignment-id">
+            <div class="space-y-3 text-sm">
+                <div>
+                    <label class="font-bold text-[#554A3E]">Ký hiệu / Biểu tượng bài tập (Ví dụ: 📌, 📘, ⚡) <span class="text-red-600">*</span>:</label>
+                    <input type="text" id="as-symbol" placeholder="📌" class="w-full px-3 py-2 border border-[#E5D5C0] rounded-lg mt-1 focus:outline-none focus:border-[#2A7B72]">
+                </div>
+                <div>
+                    <label class="font-bold text-[#554A3E]">Tên bài tập <span class="text-red-600">*</span>:</label>
+                    <input type="text" id="as-title" class="w-full px-3 py-2 border border-[#E5D5C0] rounded-lg mt-1 focus:outline-none focus:border-[#2A7B72]">
+                </div>
+                <div>
+                    <label class="font-bold text-[#554A3E]">Tóm tắt ngắn:</label>
+                    <textarea id="as-summary" rows="2" placeholder="Mô tả ngắn gọn về bài tập..." class="w-full px-3 py-2 border border-[#E5D5C0] rounded-lg mt-1 focus:outline-none focus:border-[#2A7B72]"></textarea>
+                </div>
+                <div>
+                    <div class="flex justify-between items-center">
+                        <label class="font-bold text-[#554A3E]">Nội dung chi tiết <span class="text-red-600">*</span>:</label>
+                        <button type="button" onclick="insertImagePrompt()" class="text-xs text-[#2A7B72] hover:underline font-bold">📷 Chèn URL ảnh</button>
+                    </div>
+                    <div id="as-content" contenteditable="true" class="w-full px-3 py-2 border border-[#E5D5C0] rounded-lg mt-1 focus:outline-none focus:border-[#2A7B72] bg-white editor-box" placeholder="Viết nội dung bài tập ở đây (có thể Ctrl+V dán ảnh trực tiếp)..."></div>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 mt-4">
+                <button onclick="saveAssignmentToFirebase()" class="px-4 py-2 bg-[#2A7B72] text-white font-bold rounded-lg text-sm">Lưu bài tập</button>
+                <button onclick="closeAssignmentModal()" class="px-4 py-2 bg-[#F3ECE0] text-[#554A3E] rounded-lg text-sm">Hủy</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL XEM CHI TIẾT BÀI TẬP -->
+    <div id="view-assignment-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-backdrop" onclick="closeViewModalOnBackdrop(event)">
+        <div class="bg-[#FFFDF9] border-4 border-[#C83E2B] rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <button onclick="closeViewModal()" class="absolute top-3 right-3 text-[#8C2318] hover:text-[#C83E2B] text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full bg-[#F3ECE0] border border-[#D4A237]">&times;</button>
+            <div id="view-modal-content" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-[#1A1A1A] text-[#E8BA5A] text-center py-4 mt-auto border-t-2 border-[#D4A237]">
+        <p class="text-sm">&copy; 2026 Nhóm LONG - LÂN - QUY - PHỤNG. All rights reserved.</p>
+    </footer>
+
+    <script>
+        let assignments = [];
+
+        // Mật mã riêng cho từng thành viên để xác thực collaborator
+        const memberPasswords = {
+            duyen: "duyen123",
+            truc: "truc123",
+            chau: "chau123",
+            ty: "ty123"
+        };
+
+        const memberProfiles = {
+            duyen: { key: "duyen", name: "Võ Thị Kim Duyên", role: "Thành viên", email: "duyen@longlanquyphung.edu.vn", avatar: "duyen.jpg", fallback: "https://placehold.co/140x160/F3ECE0/2A7B72?text=Kim+Duyên", quote: "Nỗ lực hết mình vì mục tiêu chung của nhóm.", bio: "Thành viên tích cực, chịu trách nhiệm sưu tầm tài liệu và nghiên cứu." },
+            truc: { key: "truc", name: "Lê Thanh Trúc", role: "Nhóm trưởng", email: "truc@longlanquyphung.edu.vn", avatar: "truc.jpg", fallback: "https://placehold.co/140x160/F3ECE0/2A7B72?text=Thanh+Trúc", quote: "Đoàn kết là sức mạnh để vượt qua mọi thử thách.", bio: "Nhóm trưởng điều phối công việc chung và phân bổ bài tập." },
+            chau: { key: "chau", name: "Phạm Ngọc Châu", role: "Nhóm trưởng", email: "chau@longlanquyphung.edu.vn", avatar: "chau.jpg", fallback: "https://placehold.co/140x160/F3ECE0/2A7B72?text=Ngọc+Châu", quote: "Sáng tạo không ngừng, học tập chủ động.", bio: "Nhóm trưởng phụ trách mảng thiết kế và sáng tạo nội dung." },
+            ty: { key: "ty", name: "Đoàn Xuân Tỷ", role: "Nhóm trưởng", email: "ty@longlanquyphung.edu.vn", avatar: "ty.jpg", fallback: "https://placehold.co/140x160/F3ECE0/2A7B72?text=Xuân+Tỷ", quote: "Vững vàng công nghệ, chinh phục mọi đỉnh cao.", bio: "Nhóm trưởng phụ trách kỹ thuật hệ thống và tích hợp dữ liệu." }
+        };
+
+        let currentActiveMemberKey = '';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const editor = document.getElementById('as-content');
+            if (editor) {
+                editor.addEventListener('paste', (e) => {
+                    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                    for (let item of items) {
+                        if (item.type.indexOf('image') === 0) {
+                            e.preventDefault();
+                            const blob = item.getAsFile();
+                            const reader = new FileReader();
+                            reader.onload = function(event) {
+                                const img = document.createElement('img');
+                                img.src = event.target.result;
+                                img.className = 'max-w-full rounded-lg my-2 border border-[#E5D5C0] shadow-sm';
+                                const selection = window.getSelection();
+                                if (!selection.rangeCount) return;
+                                selection.getRangeAt(0).insertNode(img);
+                            };
+                            reader.readAsDataURL(blob);
+                        }
+                    }
+                });
+            }
+        });
+
+        function insertImagePrompt() {
+            const url = prompt("Nhập đường dẫn hình ảnh (URL):");
+            if (url) {
+                const img = `<img src="${url}" class="max-w-full rounded-lg my-2 border border-[#E5D5C0] shadow-sm">`;
+                document.getElementById('as-content').innerHTML += img;
+            }
+        }
+
+        // Quản lý Profile từng thành viên
+        function openProfile(key) {
+            currentActiveMemberKey = key;
+            const data = memberProfiles[key];
+            if (!data) return;
+            document.getElementById('modal-content').innerHTML = `
+                <div class="text-center">
+                    <img src="${data.avatar}" alt="${data.name}" class="avatar mx-auto mb-3" onerror="this.src='${data.fallback}'">
+                    <h3 class="text-2xl font-bold text-[#8C2318]">${data.name}</h3>
+                    <p class="text-xs font-bold text-[#2A7B72] uppercase tracking-wider mt-1">${data.role}</p>
+                    <div class="w-16 h-0.5 bg-[#D4A237] mx-auto my-3"></div>
+                </div>
+                <div class="space-y-3 text-sm text-[#554A3E] mt-4">
+                    <div class="bg-[#FAF6EE] p-3 rounded-lg border border-[#E5D5C0]">
+                        <p class="font-bold text-[#8C2318]">📧 Email liên hệ:</p>
+                        <p class="text-xs font-mono text-[#2A7B72] mt-0.5">${data.email}</p>
+                    </div>
+                    <div class="bg-[#FAF6EE] p-3 rounded-lg border border-[#E5D5C0]">
+                        <p class="font-bold text-[#8C2318]">📖 Giới thiệu chi tiết:</p>
+                        <p class="text-xs mt-0.5">${data.bio}</p>
+                    </div>
+                    <div class="text-center italic text-xs text-[#2A7B72] pt-1">"${data.quote}"</div>
+                    <div class="text-center pt-3">
+                        <button onclick="promptMemberPassword()" class="px-4 py-2 bg-[#8C2318] text-[#E8BA5A] font-bold rounded-lg text-xs border border-[#D4A237] hover:bg-[#C83E2B] transition">✏️ Chỉnh Sửa Thông Tin Cá Nhân</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('profile-modal').classList.remove('hidden');
+        }
+
+        function closeProfile() { document.getElementById('profile-modal').classList.add('hidden'); }
+        function closeProfileOnBackdrop(event) { if (event.target.id === 'profile-modal') closeProfile(); }
+
+        function promptMemberPassword() {
+            closeProfile();
+            document.getElementById('member-pass-input').value = '';
+            document.getElementById('password-modal').classList.remove('hidden');
+        }
+
+        function closePasswordModal() { document.getElementById('password-modal').classList.add('hidden'); }
+
+        function verifyMemberPassword() {
+            const enteredPass = document.getElementById('member-pass-input').value;
+            if (enteredPass === memberPasswords[currentActiveMemberKey]) {
+                closePasswordModal();
+                openEditProfileModal();
+            } else {
+                alert('Mật mã không chính xác! Vui lòng thử lại.');
+            }
+        }
+
+        function openEditProfileModal() {
+            const data = memberProfiles[currentActiveMemberKey];
+            document.getElementById('edit-avatar-url').value = data.avatar;
+            document.getElementById('edit-bio-text').value = data.bio;
+            document.getElementById('edit-profile-modal').classList.remove('hidden');
+        }
+
+        function closeEditProfileModal() { document.getElementById('edit-profile-modal').classList.add('hidden'); }
+
+        function saveProfileChanges() {
+            const newAvatar = document.getElementById('edit-avatar-url').value;
+            const newBio = document.getElementById('edit-bio-text').value;
+
+            if (newAvatar) memberProfiles[currentActiveMemberKey].avatar = newAvatar;
+            if (newBio) memberProfiles[currentActiveMemberKey].bio = newBio;
+
+            const avatarEl = document.getElementById(`card-avatar-${currentActiveMemberKey}`);
+            const bioEl = document.getElementById(`card-bio-${currentActiveMemberKey}`);
+            if (avatarEl) avatarEl.src = memberProfiles[currentActiveMemberKey].avatar;
+            if (bioEl) bioEl.textContent = memberProfiles[currentActiveMemberKey].bio;
+
+            closeEditProfileModal();
+            alert('Cập nhật thông tin thành công!');
+        }
+
+        // Điều hướng giữa các trang nhỏ (Tab)
+        function switchTab(tabName) {
+            const aboutSection = document.getElementById('tab-about');
+            const membersSection = document.getElementById('tab-members');
+            const assignmentsSection = document.getElementById('tab-assignments');
+            const btnAbout = document.getElementById('btn-about');
+            const btnMembers = document.getElementById('btn-members');
+            const btnAssignments = document.getElementById('btn-assignments');
+
+            aboutSection.classList.add('hidden');
+            membersSection.classList.add('hidden');
+            assignmentsSection.classList.add('hidden');
+
+            [btnAbout, btnMembers, btnAssignments].forEach(btn => {
+                btn.classList.remove('bg-[#8C2318]', 'text-[#E8BA5A]', 'border', 'border-[#D4A237]');
+                btn.classList.add('hover:bg-[#8C2318]', 'hover:text-[#E8BA5A]');
+            });
+
+            if (tabName === 'about') {
+                aboutSection.classList.remove('hidden');
+                btnAbout.classList.add('bg-[#8C2318]', 'text-[#E8BA5A]', 'border', 'border-[#D4A237]');
+            } else if (tabName === 'members') {
+                membersSection.classList.remove('hidden');
+                btnMembers.classList.add('bg-[#8C2318]', 'text-[#E8BA5A]', 'border', 'border-[#D4A237]');
+            } else {
+                assignmentsSection.classList.remove('hidden');
+                btnAssignments.classList.add('bg-[#8C2318]', 'text-[#E8BA5A]', 'border', 'border-[#D4A237]');
+            }
+        }
+
+        // Tích hợp Firebase Firestore cho Bài Tập Nhóm
+        window.loadAssignmentsFromFirebase = async function() {
+            try {
+                const querySnapshot = await window.getDocs(window.collection(window.db, "assignments"));
+                assignments = [];
+                querySnapshot.forEach((docSnap) => {
+                    assignments.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                renderAssignments();
+            } catch (e) {
+                console.error("Lỗi khi tải bài tập từ Firebase: ", e);
+            }
+        }
+
+        function renderAssignments(filterText = '') {
+            const listContainer = document.getElementById('assignments-list');
+            listContainer.innerHTML = '';
+
+            const filtered = assignments.filter(item => 
+                (item.title && item.title.toLowerCase().includes(filterText.toLowerCase())) ||
+                (item.symbol && item.symbol.toLowerCase().includes(filterText.toLowerCase()))
+            );
+
+            if (filtered.length === 0) {
+                listContainer.innerHTML = '<p class="text-[#554A3E] text-center py-6 bg-[#FFFDF9] rounded-xl border border-[#E5D5C0] italic">Chưa có bài tập nào được đăng hoặc không tìm thấy kết quả.</p>';
+                return;
+            }
+
+            filtered.forEach((item) => {
+                const card = document.createElement('div');
+                card.className = 'bg-[#FFFDF9] p-4 rounded-xl shadow-sm border-2 border-[#E5D5C0] flex items-center justify-between transition hover:border-[#2A7B72] hover:bg-[#FAF6EE] cursor-pointer';
+                
+                card.innerHTML = `
+                    <div class="flex items-center space-x-4">
+                        <span class="text-3xl p-2 bg-[#F3ECE0] rounded-lg border border-[#D4A237] text-center w-14 h-14 flex items-center justify-center">${item.symbol || '📌'}</span>
+                        <div>
+                            <h3 class="font-bold text-lg text-[#8C2318]">${item.title}</h3>
+                            <p class="text-xs text-[#554A3E] mt-0.5">${item.summary || 'Nhấp vào ký hiệu/biểu tượng để xem chi tiết bài tập...'}</p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold text-[#2A7B72] px-3 py-1.5 bg-[#FAF6EE] border border-[#2A7B72] rounded-lg">Xem bài tập ➔</span>
+                `;
+
+                card.onclick = () => openViewAssignmentModal(item);
+                listContainer.appendChild(card);
+            });
+        }
+
+        function filterAssignments() {
+            const query = document.getElementById('search-input').value;
+            renderAssignments(query);
+        }
+
+        function openAssignmentForm() {
+            document.getElementById('assignment-modal-title').textContent = "📝 Đăng Bài Tập Mới";
+            document.getElementById('edit-assignment-id').value = "";
+            document.getElementById('as-symbol').value = "📌";
+            document.getElementById('as-title').value = "";
+            document.getElementById('as-summary').value = "";
+            document.getElementById('as-content').innerHTML = "";
+            document.getElementById('assignment-modal').classList.remove('hidden');
+        }
+
+        function closeAssignmentModal() {
+            document.getElementById('assignment-modal').classList.add('hidden');
+        }
+
+        async function saveAssignmentToFirebase() {
+            const id = document.getElementById('edit-assignment-id').value;
+            const symbol = document.getElementById('as-symbol').value.trim() || "📌";
+            const title = document.getElementById('as-title').value.trim();
+            const summary = document.getElementById('as-summary').value.trim();
+            const content = document.getElementById('as-content').innerHTML.trim();
+
+            if (!title || !content) {
+                alert("Vui lòng nhập đầy đủ Tên bài tập và Nội dung chi tiết!");
+                return;
+            }
+
+            const data = { symbol, title, summary, content, updatedAt: new Date().toISOString() };
+
+            try {
+                if (id) {
+                    await window.updateDoc(window.doc(window.db, "assignments", id), data);
+                    alert("Cập nhật bài tập thành công!");
+                } else {
+                    await window.addDoc(window.collection(window.db, "assignments"), data);
+                    alert("Đăng bài tập mới thành công!");
+                }
+                closeAssignmentModal();
+                window.loadAssignmentsFromFirebase();
+            } catch (e) {
+                console.error("Lỗi khi lưu bài tập lên Firebase: ", e);
+                alert("Có lỗi xảy ra khi lưu bài tập. Vui lòng kiểm tra lại kết nối.");
+            }
+        }
+
+        function openViewAssignmentModal(item) {
+            const contentHtml = `
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-3 border-b border-[#E5D5C0] pb-3">
+                        <span class="text-3xl p-2 bg-[#F3ECE0] rounded-lg border border-[#D4A237]">${item.symbol || '📌'}</span>
+                        <div>
+                            <h2 class="text-2xl font-bold text-[#8C2318]">${item.title}</h2>
+                            <p class="text-xs text-[#554A3E]">Cập nhật lần cuối: ${new Date(item.updatedAt || Date.now()).toLocaleDateString('vi-VN')}</p>
+                        </div>
+                    </div>
+                    <div class="text-[#1A1A1A] leading-relaxed space-y-2 pt-2">${item.content}</div>
+                    <div class="flex justify-end space-x-2 pt-4 border-t border-[#E5D5C0]">
+                        <button onclick="promptEditAssignment('${item.id}')" class="px-3 py-1.5 bg-[#2A7B72] text-white font-bold rounded-lg text-xs">✏️ Chỉnh sửa</button>
+                        <button onclick="deleteAssignment('${item.id}')" class="px-3 py-1.5 bg-[#C83E2B] text-white font-bold rounded-lg text-xs">🗑️ Xóa</button>
+                        <button onclick="closeViewModal()" class="px-3 py-1.5 bg-[#F3ECE0] text-[#554A3E] rounded-lg text-xs">Đóng</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('view-modal-content').innerHTML = contentHtml;
+            document.getElementById('view-assignment-modal').classList.remove('hidden');
+        }
+
+        function closeViewModal() { document.getElementById('view-assignment-modal').classList.add('hidden'); }
+        function closeViewModalOnBackdrop(event) { if (event.target.id === 'view-assignment-modal') closeViewModal(); }
+
+        function promptEditAssignment(id) {
+            const item = assignments.find(a => a.id === id);
+            if (!item) return;
+            closeViewModal();
+            document.getElementById('assignment-modal-title').textContent = "✏️ Chỉnh Sửa Bài Tập";
+            document.getElementById('edit-assignment-id').value = item.id;
+            document.getElementById('as-symbol').value = item.symbol || "📌";
+            document.getElementById('as-title').value = item.title || "";
+            document.getElementById('as-summary').value = item.summary || "";
+            document.getElementById('as-content').innerHTML = item.content || "";
+            document.getElementById('assignment-modal').classList.remove('hidden');
+        }
+
+        async function deleteAssignment(id) {
+            if (confirm("Bạn có chắc chắn muốn xóa bài tập này không?")) {
+                try {
+                    await window.deleteDoc(window.doc(window.db, "assignments", id));
+                    alert("Xóa bài tập thành công!");
+                    closeViewModal();
+                    window.loadAssignmentsFromFirebase();
+                } catch (e) {
+                    console.error("Lỗi khi xóa bài tập: ", e);
+                    alert("Không thể xóa bài tập. Vui lòng thử lại.");
+                }
+            }
+        }
+    </script>
+</body>
+</html>
